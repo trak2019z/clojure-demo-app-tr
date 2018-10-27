@@ -1,7 +1,7 @@
 # Aplikacja internetowa w Clojure(Script)
-*Niniejszy dokument prezentuje kolejne kroki w tworzeniu aplikacji internetowej z wykorzystaniem języka Clojure i ClojureScript. Aplikacja składa się z: frontendu napisanego za pomocą biblioteki Rum (wrapper ReactJS dla ClojureScript) i bibliotek pomocniczych, oraz backendu w formie REST Api.*
+*Niniejszy dokument prezentuje kolejne kroki w tworzeniu aplikacji internetowej z wykorzystaniem języka Clojure i ClojureScript. Aplikacja składa się z: frontendu napisanego za pomocą biblioteki Rum (wrapper ReactJS dla ClojureScript) i bibliotek pomocniczych, oraz backendu w formie REST Api. Strona internetowa składa się z: widoku listy filmów, które można filtrować i grupować, widoku pojedynczego filmu oraz strony z formularzem kontaktowym. Backend ma za zadanie obsłużyć zapytania po jednej dla każdej ze stron - pobranie danych o filmach oraz wysłanie wiadomości przez formularz kontaktowy*
 
-Do pełnego zrozumienia treści przedstawionej w artykule konieczna jest podstawowa znajomość zasad działania ReactJS oraz REST Api.
+Do pełnego zrozumienia treści przedstawionej w artykule konieczna jest podstawowa znajomość terminologii i zasad działania ReactJS oraz REST Api.
 
 ### Kody źródłowe
 
@@ -175,17 +175,104 @@ Wygenerowany plik ma postać:
                         [ring/ring-mock "0.3.2"]]}})
 
 ```
-Fragment, który będzie nas interesował jest pod kluczem `:dependencies`. Należy dodać kolejne zależności:
+Fragment, który będzie nas interesował znajduje się pod kluczem `:dependencies`. Należy dodać kolejne zależności:
 ```clojure
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [compojure "1.6.1"]
                  [ring/ring-json "0.4.0"]
                  [ring/ring-defaults "0.3.2"]
                  [ring-cors "0.1.12"]
-                 [clojure.jdbc/clojure.jdbc-c3p0 "0.3.3"]
                  [org.postgresql/postgresql "42.1.4"]
-                 [com.h2database/h2 "1.3.168"]
-                 [cheshire "5.8.1"]
-                 [oksql "1.2.1"]
-                 [org.clojure/java.jdbc "0.7.8"]]
+                 [oksql "1.2.1"]]
 ```
+#### ./src/api/handler.clj
+Kolejny edytowanym plikiem jest `./src/api/handler.clj`. Można go podzielić na 3 części:
+```clojure
+(ns api.handler
+  (:require [compojure.core :refer :all]
+            [compojure.route :as route]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]))
+```
+Pierwsza część zawiera definicję przestrzeni nazw - w tym wypadku `api.handler`, oraz zależności - po `:require`.
+```clojure
+(defroutes app-routes
+  (GET "/" [] "Hello World")
+  (route/not-found "Not Found"))
+```
+Środek programu składa się z definicji ścieżek. Jak widać dla domyślnej aplikacji obsługujemy jedynie *rootpath*, a każdy inny zwraca `Not found`.
+```clojure
+(def app
+  (wrap-defaults app-routes site-defaults))
+```
+Powyższe ma za zadanie uruchomić serwer dla zdefiniowanych ścieżek.
+
+Nasza aplikacja będzie obsługiwać 2 zapytania HTTP.
+ - `POST /contact` - obsługa formularza kontaktowego, który przygotujemy po stronie frontendu. Jego funkcjonalność będzie ograniczać się jedynie do przyjęcia danych i wyświetlenia ich w terminalu.
+ - `GET /movies` - zapytanie to będzie zwracać listę filmów pobraną z bazy danych.
+
+Zanim jednak przystąpimy do napisania kodu obsługującego wspomniane zapytania, musimy zaktualizować zależności:
+```clojure
+(ns clojure-rest.handler
+  (:require [compojure.core :refer :all]
+            [compojure.route :as route]
+            [compojure.handler :as handler]
+            [ring.middleware.json :as middleware]
+            [ring.middleware.cors :refer [wrap-cors]]
+            [oksql.core :as oksql]))
+```
+
+##### GET /movies
+Aby zwrócić listę filmów, konieczne jest pierw pobranie ich z bazy. Z pomocą przychodzi nam biblioteka `oksql`. Pozwala ona na obsługę zapytań SQL do bazy danych postgres. Pierwszym krokiem jest dodanie pliku z zapytaniem. W tym celu należy stworzyć katalog `resources/sql`, a w nim dodać plik `film.sql`. Komentarze są ważne, ponieważ późniejsze odwołanie do zapytania ma postać `:{nazwa-pliku}/{name}`, czyli w naszym przypadku `:film/all`:
+```sql
+-- film.sql
+
+-- name: all
+select film_id, title, description, release_year, rating, length
+from film
+limit 50
+```
+Po stworzeniu pliku z zapytaniem wracamy do `api.handler`, gdzie dodajemy kod odpowiedzialny za połączenie z bazą danych, obsługę zapytania SQL oraz HTTP:
+```clojure
+(def db {:connection-uri "jdbc:postgresql://localhost:5432/dvdrental"})
+
+(def query (partial oksql/query db))
+
+(defn all []
+  "Fetch 50 movies"
+  (query :film/all))
+
+(defroutes app-routes
+  (GET "/movies" [] (all))
+  (route/not-found "Not Found"))
+```
+
+Z PostgreSQL zwracany będzie JSON, więc konieczne jest dodanie middleware, które go obsłuży. Chcemy również pozbyć się problemów związanych CORS, więc konieczne jest dodanie kolejnego middleware'a. Url podany w `:access-control-allow-origin` jest to domyślny adres frontendu, który za moment stworzymy. Oczywiście można go dowolnie modyfikować:
+
+```clojure
+(def app
+  (-> (handler/api (wrap-cors app-routes
+                              :access-control-allow-origin [#"http://localhost:3449"]
+                              :access-control-allow-methods [:get :post]))
+      (middleware/wrap-json-body)
+      (middleware/wrap-json-response)))
+```
+Nasz kod przetestować możemy uruchamiając serwer i uruchamiając w przeglądarce adres naszego API z odpowiednim URI `http://localhost:3000/movies`, bądź w terminalu z pomocą *curl*: `curl -X GET http://localhost:3000/movies`.
+
+# IMG
+
+##### POST /contact
+Request ma jedynie wyświetlać w konsoli przesłań doń dane. Należy napisać funkcję, która przyjmie zapytanie jako argument, oraz dodać kolejny *route*:
+```clojure
+
+(defn handle-contact [req]
+  (println "KONTAKT" (:params req))
+  "Dziękujemy za kontakt!")
+
+(defroutes app-routes
+  (GET "/movies" [] (all))
+  (POST "/contact" request (handle-contact request))
+  (route/not-found "Not Found"))
+```
+Ze względu na fakt, że jest to zapytanie POST, odpada możliwość testowania w przeglądarce. Możemy użyć albo *curl*: ` curl -X POST -d 'klucz=wartosc' -H 'application/x-www-form-urlencoded' http://localhost:3000/contact`, albo innego oprogramowania (np. *Postman*).
+
+2 działające requesty to wszystko co potrzebowaliśmy do naszej aplikacji - przechodzimy więc do frontendu!
