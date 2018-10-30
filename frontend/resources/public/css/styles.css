@@ -1,0 +1,73 @@
+body {
+  background: white;
+  font-family: Helvetica, Arial, sans-serif;
+  color: #444; }
+
+* {
+  box-sizing: border-box; }
+
+#wrapper {
+  margin: 20px auto;
+  max-width: 1080px;
+  padding: 0 18px;
+  width: 100%; }
+
+nav.menu {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+  text-align: center; }
+  nav.menu .button {
+    flex: 1; }
+
+.button {
+  display: inline-block;
+  color: white;
+  background-color: #3a4252;
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color .3s;
+  text-decoration: none;
+  border-left-color: #4f5a70; }
+  .button:not(:first-child) {
+    border-left: 1px solid rgba(255, 255, 255, 0.05); }
+  .button:hover, .button.active {
+    background-color: #506590; }
+
+.buttons-group {
+  display: inline-block;
+  border-radius: 100px;
+  box-shadow: 0 2px 2px 0px rgba(0, 0, 0, 0.15); }
+  .buttons-group .button:first-child {
+    border-radius: 100px 0 0 100px; }
+  .buttons-group .button:last-child {
+    border-radius: 0 100px 100px 0; }
+
+.hp_films {
+  list-style: none;
+  padding: 0;
+  margin: 0; }
+  .hp_films .film {
+    display: inline-block;
+    width: 33.333334%;
+    padding: 12px;
+    height: 270px;
+    margin-right: -1px;
+    margin-top: -1px;
+    vertical-align: top;
+    border: 1px solid #ededed; }
+    .hp_films .film h2 {
+      margin: 0; }
+
+.hp_filters .buttons-group .reverse {
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-left: -8px;
+  border-left: none; }
+
+label.form-input {
+  display: block;
+  margin: 8px 0; }
+  label.form-input span {
+    display: inline-block;
+    width: 200px; }
