@@ -5,7 +5,7 @@
 
 ## Kody źródłowe
 
-https://github.com/rilek/cljs-demo-app
+https://github.com/rilek/clojure-demo-app
 
 ## Wymagania
 Do wykonania projektu konieczne jest zainstalowanie oprogramowania:
