@@ -16,6 +16,18 @@ Projekt powinien dobrze działać na dystrybucjach Linuxa oraz macOS. Nie ma gwa
 
 Wykorzystano również przykładową bazę danych DVDRental ([Link](http://www.postgresqltutorial.com/postgresql-sample-database/)).
 
+## Uruchomienie projektu
+```sh
+# REST Api
+cd api && lein ring server
+
+# Frontend
+cd frontend && lein figwheel
+
+# SCSS Watcher & compiler
+cd frontend && lein scss :develop
+```
+
 ## REPL
 Po zainstalowaniu Leningen możliwe jest uruchomienie środowiska interaktywnego w terminalu za pomocą komendy: `lein repl`. Linie kodu w kolejnym rozdziale zaczynające się od `user=>` można uruchomić w środowisku i sprawidzić efekt. `  #_=> ` oznacza ciąg dalszy instrukcji powyżej. Wspomnianych prefixów się nie wpisuje do linii poleceń.
 
