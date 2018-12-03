@@ -73,24 +73,24 @@
      [:div.hp_films {}
       (for [[group films] prepared-films]
         [:div {:key group}
-          [:h3 {} group]
-          (for [film films]
-            [:div.film {:key (get film "film-id")}
-              [:h2 {} (get film "title" "N/A")]
-              [:p {} (get film "description" "N/A")]
-              [:small "Data wydania: " (get film "release-year" "N/A") " r."][:br]
-              [:small "Długość: " (get film "length" "N/A")][:br]
-              [:small "Rating: " (get film "rating" "N/A")][:br]])])]]))
+         [:h3 {} group]
+         (for [film films]
+           [:div.film {:key (get film "film-id")}
+            [:h2 {} (get film "title" "N/A")]
+            [:p {} (get film "description" "N/A")]
+            [:small "Data wydania: " (get film "release-year" "N/A") " r."][:br]
+            [:small "Długość: " (get film "length" "N/A")][:br]
+            [:small "Rating: " (get film "rating" "N/A")][:br]])])]]))
 
 (rum/defc input
   [atom key label params]
   [:label.form-input
-       [:span label]
-       [(or (:tag params) :input)
-        (merge {:type "text"
-                :value (or (key @atom) "")
-                :on-change #(swap! atom assoc key (-> % .-target .-value))}
-               (dissoc params :tag))]])
+   [:span {} label]
+   [(or (:tag params) :input)
+    (merge {:type "text"
+            :value (or (key @atom) "")
+            :on-change #(swap! atom assoc key (-> % .-target .-value))}
+           (dissoc params :tag))]])
 
 (rum/defcs contact <
   (rum/local {} :form)
@@ -99,8 +99,8 @@
         form-data @form]
     [:div.contact
      [:h2 {} "Kontakt"]
-     [:form {:on-submit #(do
-                          (.preventDefault %)
+     [:form {:on-submit (fn [ev]
+                          (.preventDefault ev)
                           (s/post! :contact-form form-data)
                           (reset! form {}))}
       (input form :name "Adresat")
@@ -113,9 +113,8 @@
        [:p "Numer telefonu: " (:phone form-data)]
        [:p "Wiadomość: " (:message form-data)]]]]))
 
-(defn menu []
-  (let [{curr-route :handler params :params} (s/subscription [:router])
-        routes [[:app/index "List filmów"] [:app/contact "Kontakt"]]]
+(defn menu [curr-route params]
+  (let [routes [[:app/index "List filmów"] [:app/contact "Kontakt"]]]
     [:nav.menu.buttons-group {}
      (for [[route text] routes]
        [:a.button {:class (if (= curr-route route) "active")
@@ -125,10 +124,9 @@
 (rum/defcs wrapper <
   rum/reactive
   [state]
-  (let [{route :handler params :params} (s/subscription [:router])
-        routes [[:app/index "Lista filmów"] [:app/contact "Kontakt"]]]
+  (let [{route :handler params :params} (s/subscription [:router])]
     [:div#wrapper
-     (menu)
+     (menu route params)
 
      (case route
        :app/index (films)

@@ -108,7 +108,6 @@
   (println "Route change to: " name params query)
   (dispatch! :router :push {:handler name :params params :query query}))
 
-
-(bide.core/start! router {:default :app/index
-                            :on-navigate on-navigate
-                            :html5? true})
+(r/start! router {:default :app/index
+                  :on-navigate on-navigate
+                  :html5? true})

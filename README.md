@@ -9,8 +9,8 @@ https://github.com/rilek/clojure-demo-app
 
 ## Wymagania
 Do wykonania projektu konieczne jest zainstalowanie oprogramowania:
- - Leiningen ([Link]("https://leiningen.org/"))
- - PostgreSQL ([Link]("https://www.postgresql.org/"))
+ - Leiningen ([Link](https://leiningen.org/))
+ - PostgreSQL ([Link](https://www.postgresql.org/))
 
 Projekt powinien dobrze działać na dystrybucjach Linuxa oraz macOS. Nie ma gwarancji działania na Windowsie.
 
@@ -67,6 +67,8 @@ user=> x
 #object[clojure.lang.Atom 0x14c21098 {:status :ready, :val nil}]
 
 ;; przypisanie wartości
+user=> (def x (atom nil))
+#'user/x
 user=> (reset! x 10)
 10
 user=> x
@@ -75,29 +77,33 @@ user=> @x
 10
 
 ;; zmiana
+user=> (def x (atom 10))
+#'user/x
 user=> (swap! x + 10)
 20
 ```
 Na powyższym przykładzie widać, że funkcja `reset!` przyjmuje jako argumenty atom oraz wartość do przypisania, natomiast `swap!` atom, funkcję zmieniającą, oraz kolejne parametry funkcji zmieniającej. Ostatni przykład jest równoważny z poniższym:
 ```clojure
+user=> (def x (atom 10))
+#'user/x
 user=> (reset! x (+ @x 10))
 20
 ```
 
 ### Zakres lokalny
+Zakres lokalny pozwala na lokalne zdefiniowane stałych. Zwraca on wartość ostatniej operacji. Zakres tworzony jest poprzez słowo kluczone `let`. Następnie, w nawiasach kwadratowych, definiowane są stałe, a po nich występują instrukcje.
+
 ```clojure
 user=> (let [z 1]
 #_=>     z)
 1
 user=> (let [z 10]
-         (* z 100)
+#_=>     (* z 100)
 #_=>     (+ z 10))
 20
 user=> z
 CompilerException java.lang.RuntimeException: Unable to resolve symbol: z in this context, compiling:(/tmp/form-init1150485929264120195.clj:1:1282)
-user=> x
 ```
-Zakres lokalny pozwala na lokalne zdefiniowane stałych. Zwraca on wartość ostatniej operacji. Zakres tworzony jest poprzez słowo kluczone `let`. Następnie, w nawiasach kwadratowych, definiowane są stałe, a po nich występują instrukcje.
 
 ### Struktury danych
 
@@ -123,7 +129,7 @@ user=> (nth x 2)
 3
 ```
 
-Mapy zawierają pary `klucz wartość`. Pierwszym może być albo string, liczba bądź keyword - specjalna wartość poprzedzona znakiem dwukropka `:`. Jeśli klucz nie jest instancją `key`, dostęp do wartości wymaga użycia funkcji `get`. W przeciwnym razie można wykorzystać klucz jako funkcję.
+Mapy zawierają pary `klucz wartość`. Kluczem może być string, liczba bądź keyword - specjalna wartość poprzedzona znakiem dwukropka `:`. Jeśli klucz nie jest instancją `key`, dostęp do wartości wymaga użycia funkcji `get`. W przeciwnym razie można wykorzystać klucz jako funkcję, tj. można go umieścić na pierwszym miejscu instrukcji, dzięki czemu zwrócona zostanie wartość w mapie pod nim leżąca. Zaletą funkcji `get` jest możliwość użycia trzeciego parametru przy wywoływaniu, który zostanie zwrócony, jeśli mapa nie zawiera podanego klucza.
 
 ```clojure
 user=> (def x {:a 1 "b" 2})
@@ -132,17 +138,19 @@ user=> (:a x)
 1
 user=> (get x "b")
 2
+user=> (get x "foo" "N/A")
+"N/A"
 ```
 
-W Clojure zaimplementowano destrukturyzację map i wektorów. Pierwszy wariant przedstawia destrukturyzację, gdzie klucz zostaje stałą o tej samej nazwy (poza znkaiem `:` oczywiście). Opcja druga pozwala pobranie kluczy i zmianę nazwy. Ostatni przykład przedstawia listę, z której pobierane są pierwszy i trzeci element, a drugi i wszystkie po 4 sa ignorowane. Wykorzystanie poniżej.
+W Clojure zaimplementowano destrukturyzację map i wektorów. Pierwszy wariant przedstawia opcję, gdzie klucz zostaje stałą o tej samej nazwy (poza znakiem `:` oczywiście). Opcja druga pozwala pobranie kluczy i zmianę nazwy. Ostatni przykład wykorzystuje listę, z której pobierane są pierwszy i trzeci element, a drugi i wszystkie po 4 sa ignorowane.
 
 ```clojure
 user=> (def x {:foo 1 :bar 2 :buzz 3})
 user=> (let [{:keys [foo bar buzz]} x]
 #_=>     [foo bar buzz])
 [1 2 3]
-user=> (let [{f :foo b :bar bz :buzz}]
-#_=>       [f b bz])
+user=> (let [{f :foo b :bar bz :buzz} x]
+#_=>     [f b bz])
 [1 2 3]
 user=> (let [[foo _ bar] [1 2 3 4 5 6 7]]
 #_=>     [foo bar])
@@ -151,7 +159,7 @@ user=> (let [[foo _ bar] [1 2 3 4 5 6 7]]
 
 ### Funkcje
 
-Funkcje, podobnie jak zakresy, zwracają jedynie wartość ostatniej operacji. Clojure pozwala na przysłanianie oraz dynamiczną liczbe parametrów. Można je definiować w formie nazwanej jak i anonimowej. Drugi przypadek posiada nienazwane argumenty - są one reprezentowane poprzez znak `%`. W przypadku wielu argumentów drugi to `%2` itd. Sama jej definicja to `#`, po którym występują nawiasy, w których umieszcozne są instrukcje. Definicja w danym zakresie nazw polega na wywołaniu `defn`, po którym występuje nazwa, argumenty w nawiasach kwadratowych, a następnie instrukcje.
+Funkcje, podobnie jak zakresy, zwracają jedynie wartość ostatniej operacji. Clojure pozwala na przysłanianie oraz dynamiczną liczbe parametrów. Można je definiować w formie nazwanej jak i anonimowej. Drugi przypadek posiada jednoczenieśnie nienazwane argumenty - są one reprezentowane poprzez znak `%`. W przypadku wielu argumentów drugi to `%2` itd. Sama jej definicja to znak `#`, po którym występują nawiasy, w których umieszczone są instrukcje. Definicja w danym zakresie nazw polega na wywołaniu `defn`, po którym występuje nazwa, argumenty w nawiasach kwadratowych, a następnie instrukcje.
 
 ```clojure
 ;; funkcja nazwana
@@ -162,31 +170,34 @@ Funkcje, podobnie jak zakresy, zwracają jedynie wartość ostatniej operacji. C
 (def funkcja2 #(+ %1 %2))
 ```
 
-Clojure posiada makro ` ->` (`thread-frist`) pozwala na pisanie czytelniejszego kodu poprzez pozbycie się zagnieżdżeń wywołania funkcji. Działa w ten sposób, że pierwszy parametr jest przekazywany do późniejszych funkcji również jako pierwszy parametr. Poniższy przykład działa w następujący sposób:
+Clojure posiada makro ` ->` (`thread-frist`), które pozwala na pisanie czytelniejszego kodu poprzez pozbycie się zagnieżdżeń wywołania funkcji. Działa w ten sposób, że pierwszy parametr jest przekazywany do późniejszych funkcji również jako pierwszy parametr. Poniższy przykład działa w następujący sposób:
+
+```clojure
+user=> (-> {:a "Hello World"}
+#_=>    :a                          ;; "Hello World"
+#_=>    (clojure.string/split #" ") ;; ["Hello" "World"]
+#_=>    first                       ;; "Hello"
+#_=>    (str " You"))               ;; "Hello You"
+"Hello You"
+```
 
 - Z podanej mapy zwracana jest wartość pod kluczem `:a` -> `"Hello World"`
 - String podzielony jest na podstawie spacji -  `#""`  w Clojure oznacza Regex Pattern -> `["Hello" "World"]`
 - Pobierany jest pierwszy element listy -> `"Hello"`
-- String łączony jest ze stringiem " You" -> `"Hello You"`
+- String łączony jest ze stringiem `" You"` -> `"Hello You"`
 
-```clojure
-user=> (-> {:a "Hello World"}
-#_=>    :a
-#_=>    (clojure.string/split #" ")
-#_=>    first
-#_=>    (str " You"))
-"Hello You"
-```
 
-Istnieje również wariacja makra - `thread-last`( `->>`), które argument do funkcji przypisuje jako ostatni
+Istnieje również wariacja makra - `thread-last`( `->>`), które argument do funkcji przypisuje jako ostatni.
 
 ## REST Api
 
 ### Przygotowanie projektu
-Do stworzenia szkieletu api wykorzystamy Leiningena. Taka generyczna aplikacja korzysta z `ring` jak serwera, oraz biblioteki `compojure` do routingu.
+Do stworzenia szkieletu api wykorzystamy Leiningen. Taka generyczna aplikacja korzysta z `ring` jak serwera, oraz biblioteki `compojure` do routingu.
+
 ```sh
 > lein new compojure api && cd api
 ```
+
 Wygenerowany projekt ma następującą strukturę:
 ```
 .
@@ -202,13 +213,12 @@ Wygenerowany projekt ma następującą strukturę:
         └── handler_test.clj
 ```
  - `project.clj` - jest plikiem konfiguracyjnym projektu. Są zawarte w nim informacje, zależności, pluginy i konfiguracje buildów.
-
  - `src/api/handler.clj` - kod źródłowy naszej aplikacji.
 
   Pozostałe foldery/pliki nie mają znaczenia w realizacji projektu.
 
 ### Uruchomienie
-Serwer domyślnie działa na porcie 3000. Uruchomić go można komendą:
+Serwer domyślnie działa na porcie `3000`. Uruchomić go można komendą:
 ```clojure
 lein ring server
 ```
@@ -229,9 +239,8 @@ Wygenerowany plik ma postać:
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.2"]]}})
-
 ```
-Fragment, który będzie nas interesował znajduje się pod kluczem `:dependencies`. Należy dodać kolejne zależności:
+Fragment, który będzie nas interesował znajduje się pod kluczem `:dependencies`. Należy dodać kolejne zależności. Po ich zmianie, konieczne jest ponowne uruchomienie projektu, aby nowe biblioteki zostały pobrane i zainstalowane.
 ```clojure
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [compojure "1.6.1"]
@@ -241,8 +250,9 @@ Fragment, który będzie nas interesował znajduje się pod kluczem `:dependenci
                  [org.postgresql/postgresql "42.1.4"]
                  [oksql "1.2.1"]]
 ```
+
 ### src/api/handler.clj
-Kolejny edytowanym plikiem jest `./src/api/handler.clj`. Można go podzielić na 3 części. Pierwsza część zawiera definicję przestrzeni nazw - w tym wypadku `api.handler`, oraz zależności - po `:require`. Środek programu składa się z definicji ścieżek. Jak widać dla domyślnej aplikacji obsługujemy jedynie ścieżkę główną, a każdy inny zwraca `Not found`.
+Kolejnym edytowanym plikiem jest `./src/api/handler.clj`. Jego zawartość można podzielić na 3 części. Pierwsza część zawiera definicję przestrzeni nazw - w tym wypadku `api.handler`, oraz zależności - po `:require`. Środek programu składa się z definicji ścieżek. Jak widać dla domyślnej aplikacji obsługujemy jedynie ścieżkę główną, a każdy inny zwraca `Not found`.
 ```clojure
 ;; namespace, zależności
 (ns api.handler
@@ -300,6 +310,7 @@ Po stworzeniu pliku z zapytaniem wracamy do `api.handler`, gdzie dodajemy kod od
   (GET "/movies" [] (all))
   (route/not-found "Not Found"))
 ```
+Powyższy przykład zakłada brak konieczności podawania danych autoryzacyjnych do bazy. Można je jednak podać w uri: `jdbc:postgresql://{user}:{password}@localhost:5432/dvdrental`
 
 Z PostgreSQL zwracany będzie JSON, więc konieczne jest dodanie middleware, które go obsłuży. Chcemy również pozbyć się problemów związanych CORS, więc użyty zostanie kolejny middleware. Url podany w `:access-control-allow-origin` jest to domyślny adres frontendu, który za moment stworzymy. Oczywiście można go dowolnie modyfikować:
 
@@ -345,8 +356,7 @@ Uruchomić ją możemy za pomocą komendy `lein figwheel`. Po odpaleniu projektu
 
 Serwer figwheel ma wiele zalet. Poza szybkością (pliki są trzymane w pamięci podręcznej, więc czas dostępu jest bardzo mały), pracę bardzo usprawnia tzw. "hot reloading", czyli po wprowadzeniu zmian w kodzie i zapisaniu pliku, serwer automatycznie aktualizuje stronę otwartą w przeglądarce.
 
-
-Katalog całego projektu powinien mieć obecnie strukturę:
+Katalog całego projektu frontendu powinien mieć obecnie strukturę:
 ```
 .
 ├── dev
@@ -367,7 +377,7 @@ Katalog całego projektu powinien mieć obecnie strukturę:
 - `dev/user.clj` - kod zawarty w pliku odpowiada za start i zatrzymanie serwera figwheel w tym REPL,
 - `README.md` - podstawowe informacje o uruchomieniu i budowaniu projektu,
 - `resources/public` - pliki publiczne zawierające index.html, pliki css oraz js - w tym nasza aplikacja ClojureScript skompilowana do JavaScriptu,
-- `src` - pliki z Clojuresciptem aplikacji. Folder i nazwa pliku determinują namespace - dla naszego przypadku jest to `frontend.core`,
+- `src` - pliki z Clojuresciptem aplikacji. Niepisana zasada mówi, że folder i nazwa pliku determinują namespace - dla naszego przypadku jest to `frontend.core`,
 - `target` - folder z plikami wynikowymi po zbudowaniu projektu,
 - `project.clj` - plik konfiguracyjny o zastosowaniu analogicznym jak dla REST API.
 
@@ -380,8 +390,6 @@ Generyczny plik ma postać:
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-
-
 
   :min-lein-version "2.7.1"
 
@@ -483,7 +491,7 @@ Generyczny plik ma postać:
                                                      :target-path]}})
 ```
 
-Ze względu na skomplikowanie pliku, omówione zostaną tylko interesujące nas klucze, wraz z modyfikacjami ich wartości, które należy skopiować do swojego pliku:
+Ze względu na skomplikowanie pliku, omówione zostaną tylko interesujące nas sekcje, wraz z modyfikacjami ich wartości, które należy skopiować do swojego pliku:
 - `:dependencies` - lista zależności - analogicznie jak w przypadku api dodanie kolejnego elementu spowoduje pobranie paczki przy kolejnym uruchomieniu projektu. Dodajemy kolejne biblioteki:
 ```clojure
   :dependencies [[org.clojure/clojure "1.9.0"]
@@ -566,7 +574,7 @@ Zgodnie z konfiguracją plik `styles.scss` powinien się znaleźć w folderze `s
 </html>
 ```
 
-Do prawidłowego działania konieczne jest jeszcze uruchomienie procesu, który poza kompilowaniem SCSS, będzie również oczekiwał na zmiany w plikach i rekompilowął CSS w razie potrzeby.
+Do prawidłowego działania konieczne jest jeszcze uruchomienie procesu, który poza kompilowaniem SCSS, będzie również oczekiwał na zmiany w plikach i rekompilował CSS w razie potrzeby.
 
 ```sh
 lein scss :develop
@@ -659,12 +667,12 @@ label.form-input {
 Aplikacja w *Rum* złożona jest z komponentów. Komponent to fragment interfejsu. Każdy poza `pure component` posiada swój stan oraz cykl życia znany z ReactJS. Wyróżnić można 3 rodzaje komponentów.
 
 - pure component - nie posiada stanu ani cyklu życia. Jest zwykłą funkcją zwracającą html.
-- `rum/defc` - do funkcji renderującej (ciała) nie jest przekazywany stan komponentu.
+- `rum/defc` - do funkcji renderującej (ciała) nie jest przekazywany stan komponentu, ale wykorzystane mogą zostać funkcje cyklu życia.
 - `rum/defcs` - do ciała przekazywany jest stan.
 
-Jeśli w komponencie używane są *mixiny*, jak np. `rum/reactive`, po nazwie konieczne jest dodanie znaku mniejszości `<`.
+Jeśli w komponencie używane są *mixiny*, jak np. `rum/reactive`, po nazwie konieczne jest dodanie znaku mniejszości `<`. Natomiast funkcje cyklu życia komponentu, które otrzymują stan jako argument (`did-mount`, `will-update` itd.), powinny go również zwracać.
 
-HTML jest budowany za pomocą silnika szablonów *Hiccup*. Węzeł HTML jest wektorem, gdzie pierwszym elementem jest keyword z nazwą tagu, następnie hash-map z parametrami, a po nich zawartość, bądź sama zawartość. Dobrą praktyką jest umieszczanie pustej mapy (`{}`), jeśli po tagu występuje bezpośrednio funkcja nie zwracająca jego parametrów. Nazwy kluczy odpowiadają nazwom tagów. Poniższe przykłady są tożsame:
+HTML jest budowany za pomocą silnika szablonów *Hiccup*. Węzeł HTML jest wektorem, gdzie pierwszym elementem jest keyword z nazwą tagu, opcjonalnie klasą i id, następnie hash-map z parametrami, a po nich zawartość, bądź sama zawartość bez parametrów. Nazwy kluczy odpowiadają nazwom tagów z HTML. Poniższe przykłady są tożsame:
 ```clojure
 [:h2 {:class "header" :id "header-id"} "Some text"]
 ```
@@ -677,7 +685,6 @@ Wynikowy HTML:
 ```html
 <h2 class="header" id="header-id">Some text</h2>
 ```
-
 
 Generowany interfejs musi być inicjalizowany. W naszym przypadku jest to plik `frontend.core`, który początkowo wygląda jak poniżej:
 
@@ -708,7 +715,7 @@ Generowany interfejs musi być inicjalizowany. W naszym przypadku jest to plik `
   ;; (swap! app-state update-in [:__figwheel_counter] inc)
 ```
 
-Tworzenie komponentu obrazuje `(rum/defc hello-world ...`, a osadza go w aplikacji funkcja `rum/mount`. Stworzymy teraz własny główny komponent, który będzie służył za kontener dla całej aplikacji. Dzięki "hot reload" można często zapisywać plik i sprawdzać wynik. W przypadku błędów na dole strony pojawi się informacja z miejscem i opisem błędu.
+Tworzenie komponentu obrazuje `(rum/defc hello-world ...`, a osadza go w aplikacji funkcja `rum/mount`. Stworzymy teraz własny główny komponent, który będzie służył za kontener dla całej aplikacji. Dzięki *hot reload* można często zapisywać plik i na bieżąco sprawdzać efekt. W przypadku błędów na dole strony pojawi się informacja z miejscem i opisem błędu.
 
 ```clojure
 (rum/defc wrapper []
@@ -721,11 +728,10 @@ Tworzenie komponentu obrazuje `(rum/defc hello-world ...`, a osadza go w aplikac
 ```
 
 ### Koncepcja obsługi stanu aplikacji
-
 *Poniższy kod ma zobrazować działanie biblioteki i nie należy ich przepisywać/kopiować do projektu. Kod, który bedzie wykorzystywany zaczyna się od podrozdziału `Przygotowanie obsługi stanu`.*
 
 #### Reconciler
-Za obsługę stanu odpowiadać będzie aplikacja "Citrus". Reconciler jest głównym elementem, który zajmuje się zmianą i synchronizacją stanu.
+Za obsługę stanu odpowiadać będzie biblioteka *Citrus*. `Reconciler` jest głównym elementem, który zajmuje się zmianą i synchronizacją stanu.
 ```clojure
 (defonce reconciler
   (citrus/reconciler {:state (atom {})
@@ -734,8 +740,8 @@ Za obsługę stanu odpowiadać będzie aplikacja "Citrus". Reconciler jest głó
 ```
 
  - `:state` - zawiera atom, którego wartością jest stan reprezentowany przez mapę.
- - `:controllers` - zawiera pary klucz-wartość, gdzie kluczem jest nazwa kontrolera, a wartością funkcja obsługująca stan. Nazwa (klucz) jest odzwierciedlona w `:state`.
- - `:effect-handlers` - funkcje obsługujące "efekty uboczne", czyli np. zapytania HTTP.
+ - `:controllers` - zawiera mapę, w której kluczem jest nazwa kontrolera, a wartością funkcja obsługująca stan. Nazwa (klucz) jest odzwierciedlona w `:state`.
+ - `:effect-handlers` - funkcje obsługujące "efekty uboczne" typu zapytania HTTP.
 
 #### Wywołanie zdarzeń
 Wywołanie zdarzenia odbywa się poprzez funkcję `dispatch!`. Zdarzenie to *side effect*, które ma zmienić stan aplikacji, bądź wywołać zapytanie HTTP.
@@ -744,7 +750,7 @@ Wywołanie zdarzenia odbywa się poprzez funkcję `dispatch!`. Zdarzenie to *sid
 ```
 
 #### Obsługa zdarzeń
-Zdarzenia obsługuje się za pomocją kontrolerów. Kontrolery zbudowane są z multimetod - pozwala to na pogrupowanie funkcji odpowiedzialnych za dany fragment stanu. Każdy kontroler musi mieć conajmniej metodę `:init`, która inicjuje stan początkowy. Metody kontrolera muszą zwracać mapę z jedną parą klucz-wartość, gdzie kluczem jest `:state`, a wartość nowym stanem. Co ważne zmieniony nie jest cały stan, ale część związana z kontrolerem.
+Zdarzenia obsługuje się za pomocją kontrolerów. Kontrolery zbudowane są z multimetod - pozwala to na pogrupowanie funkcji odpowiedzialnych za dany fragment stanu. Każdy kontroler musi mieć conajmniej metodę `:init`, która inicjuje stan początkowy. Metody kontrolera muszą zwracać mapę z jedną parą klucz-wartość, gdzie kluczem jest `:state`, a wartość nowym stanem. Co ważne zmieniony nie jest cały stan aplikacji, ale część związana z kontrolerem.
 ```clojure
 (def initial-state 0)
 
@@ -761,7 +767,7 @@ Zdarzenia obsługuje się za pomocją kontrolerów. Kontrolery zbudowane są z m
 ```
 
 #### Side effect
-Side effect to np. zapytanie HTTP, dostęp do local storage itd. W "Citrus" te działania nie są wykonywane bezpośrednio w kontrolerach. Zamiast tego metody kontrolera zwracają obiekt z cechami efektów, które mają zostać wykonane.
+Side effect to np. zapytanie HTTP, dostęp do local storage itd. W "Citrus" te działania nie są wykonywane bezpośrednio w kontrolerach. Zamiast tego metody kontrolera zwracają obiekt z parametrami efektów, które mają zostać wykonane.
 ```clojure
 {:http {:url "/api/users"
         :method :post
@@ -780,7 +786,7 @@ Oraz funkcja obsługująca:
 ```
 
 #### Subskrypcje
-Subskrypcja to reaktywne zapytanie do stanu aplikacji. Innymi słowy subskrybowanie pozwala na pobranie wartości konkretnego fragmentu stanu, oraz reakcję po jego zmianie. Subskrypcja w komponencie wymaga użycia mixinu `rum/reactive` oraz funkcji `rum/react`.
+Subskrypcja to reaktywne zapytanie do stanu aplikacji. Innymi słowy subskrybowanie pozwala na pobranie wartości konkretnego fragmentu stanu, oraz reakcję po jego zmianie. Subskrypcja w komponencie wymaga użycia mixinu `rum/reactive` oraz funkcji `rum/react`w ciele komponentu.
 ```clojure
 ;; normal subscription
 (defn fname [reconciler]
@@ -788,7 +794,7 @@ Subskrypcja to reaktywne zapytanie do stanu aplikacji. Innymi słowy subskrybowa
 ```
 
 ### Przygotowanie obsługi stanu
-W przypadku naszej aplikacji kod odpowiadający za stan będzie w pliku `core.store`, czyli `src/core/store.cljs`. Na początek przygotujemy przykładowy kontroler `counter`, który pozwoli na zwiększenie bądź zmniejszenie pojedynczej wartości stanu. `counter` zawiera 3 metody: `:init`, `:inc`, `:dec`, które kolejno: ustawiają początkową wartość, zwiększają o 1 i zmniejszają o 1. Dodamy również kilka funkcji usprawniających obsługiwanie stanu: `dispatch!`, `fetch!` i `subscription`. Plik powinien mieć poniższy stan:
+W przypadku naszej aplikacji kod odpowiadający za stan będzie w pliku `core.store`, czyli `src/core/store.cljs`. Na początek przygotujemy przykładowy kontroler `counter`, który pozwoli na zwiększenie bądź zmniejszenie pojedynczej wartości stanu. `counter` zawiera 3 metody: `:init`, `:inc`, `:dec`, które kolejno: ustawiają początkową wartość, zwiększają o 1 i zmniejszają o 1. Dodamy również kilka funkcji usprawniających obsługiwanie stanu: `dispatch!`, `fetch!` i `subscription`. Na tym etapie plik powinien mieć następujący stan:
 
 ```clojure
 (ns core.store
@@ -808,7 +814,7 @@ W przypadku naszej aplikacji kod odpowiadający za stan będzie w pliku `core.st
 (defmethod counter :inc [_ _ state]
   {:state (inc state)})
 
-(defmethod counter :def [_ _ state]
+(defmethod counter :dec [_ _ state]
   {:state (dec state)})
 
 
@@ -844,7 +850,7 @@ Teraz możemy przystąpić do stworzenia komponentu interfejsu zarządzającego 
 ```clojure
 (ns frontend.core
     (:require [rum.core :as rum]
-              [core.store :as c]))
+              [core.store :as s]))
 ```
 
 Następnie tworzymy komponent subskrybujący stan `:counter`, wyświetlający jego wartość, oraz mający 2 przyciski - jeden zwiększający, drugi zmniejszający wartość licznika. Umieszczamy go w komponencie `wrapper`
@@ -870,7 +876,7 @@ Jeśli wszystko jest poprawnie, po kliknięciu w button powinna się zmienić li
 ![Licznik](./docs/counter.gif)
 
 ### Routing
-Routing pozwala na zmianę zawartości strony w zależności od adresu URL. Ponieważ figwheel w zależności od ścieżki będzie odwoływał się do innego pliku, musimy go trochę zmodyfikować. W tym celu w pliku `project.clj` modyfikujemy wartość pod kluczem `:figwheel`
+W jednym z poprzednich kroków modyfikowany był plik `project.clj`, w którym stworzyliśmy konfigurację dla serwera figwheel. Znajdowała się ta funkcja `core.server/dev-app`, zarządza ona odwoływaniem się do plików na serwerze.
 ```clojure
   :figwheel {:http-server-root "public" ;; default and assumes "resources"
              :server-port 3449 ;; default
@@ -880,7 +886,7 @@ Routing pozwala na zmianę zawartości strony w zależności od adresu URL. Poni
              :css-dirs ["resources/public/css"]} ;; watch and update CSS
 
 ```
-Zmiana ta spowoduje, że handler który będzie zarządzał odowłaniem do plików na serwerze znajduje się w pliku `core.server` i ma nazwę `dev-app`. Tworzymy więc plik `src/core/server.clj` i umieszczamy w nim poniższy kod. Pozwoli to na serwowanie assetów, a każdy inny url będzie kierował do `index.html`. Dopiero z poziomu kodu frontendu będziemy zarządzać ścieżkami.
+Znajduje się ona w pliku `core.server` i ma nazwę `dev-app`. Tworzymy więc plik `src/core/server.clj` i umieszczamy w nim poniższy kod. Pozwoli to na serwowanie assetów, a każdy inny url będzie kierował do `index.html`. Dopiero z poziomu kodu frontendu będziemy zarządzać ścieżkami i wyświetlanymi widokami.
 ```clojure
 (ns core.server
   (:require [compojure.core :refer :all]
@@ -907,54 +913,13 @@ Zmiana ta spowoduje, że handler który będzie zarządzał odowłaniem do plik�
 Następnie modyfikujemy `core.store`. Najpierw musimy dodać bibliotekę *bide*, której zadaniem jest zarządzanie ścieżkami.
 ```clojure
 (ns core.store
-    (:require-macros [cljs.core.async.macros :refer [go]])
     (:require [rum.core :as rum]
               [citrus.core :as citrus]
-              [cljs-http.client :as http]
-              [cljs.core.async :refer [<!]]
               [bide.core :as r]))
 ```
-Potem tworzymy kolekcję zawierającą warianty URL oraz kontroler `:router`. Koneczne jest też stworzenie funkcji, która będzie wykonywana za kazdym po zmianie ścieżki, a której zadaniem jest wywołanie funkcji kontrolera, który z kolei zmieni stan aplikacji. Na koniec router musi zostać wystartowany
+
+Potem tworzymy kolekcję zawierającą warianty URL oraz kontroler `:router`.
 ```clojure
-(ns core.store
-    (:require-macros [cljs.core.async.macros :refer [go]])
-    (:require [rum.core :as rum]
-              [citrus.core :as citrus]
-              [cljs-http.client :as http]
-              [cljs.core.async :refer [<!]]
-              [bide.core :as r]))
-
-(declare dispatch!)
-
-;;
-;; define controller & event handlers
-;;
-
-(defmulti film-control identity)
-(defmethod film-control :init [_ _ _]
-  {:state []})
-
-(defmethod film-control :get [_ _ state]
-  (if (empty? state)
-    {:http {:url "http://localhost:3000/movies"
-            :method :get
-            :headers {"Content-Type" "application/json"}
-            :on-success :actors-ready
-            :on-error :actors-failed}}))
-
-(defmethod film-control :movies-ready [_ [args] _]
-  {:state (js->clj (js/JSON.parse (first args)))})
-
-(defmethod film-control :movies-failed [_ _ state]
-  (println "movies failed")
-  {:state []})
-
-(defn http [reconciler ctrl-name effect]
-  (let [{:keys [on-success on-error url]} effect]
-    (go (let [response (<! (http/get url {:with-credentials? false}))]
-          (dispatch! ctrl-name :movies-ready (:body response))))
-    nil))
-
 (def router
   (r/router [["/" :app/index]
              ["/contact" :app/contact]]))
@@ -981,22 +946,19 @@ Potem tworzymy kolekcję zawierającą warianty URL oraz kontroler `:router`. Ko
      :controllers {:router route-control
                    :film film-control}
      :effect-handlers {:http http}}))
+```
 
-;; initialize controllers
-(defonce init-ctrl (citrus/broadcast-sync! reconciler :init))
+ Konieczne jest też stworzenie funkcji `on-navigate` wykonywanej po każdej zmianie ścieżki, mającej za zadanie wywołanie funkcji kontrolera, który z kolei zmieni stan aplikacji. Na koniec router musi zostać wystartowany za pomocą `r/start!`. Parametr `:html5` pozwala na pominięcie znaku `#` w URL aplikcji.
+```
+;; :html5 true
+http://localhost:3449/contact
 
-;; Utility functions
-(defn dispatch! [key action & values]
-  (citrus/dispatch! reconciler key action values))
+;; :html5 false
+http://localhost:3449/#/contact
+```
 
-(defn fetch! [key]
-  {:will-mount (fn [state]
-                 (dispatch! key :get)
-                 state)})
 
-(defn subscription [keys]
-  (rum/react (citrus/subscription reconciler keys)))
-
+```clojure
 (defn goto! [route & [args]]
   (r/navigate! router route args))
 
@@ -1005,7 +967,6 @@ Potem tworzymy kolekcję zawierającą warianty URL oraz kontroler `:router`. Ko
   [name params query]
   (println "Route change to: " name params query)
   (dispatch! :router :push {:handler name :params params :query query}))
-
 
 (r/start! router {:default :app/index
                             :on-navigate on-navigate
@@ -1020,9 +981,8 @@ Teraz możemy zasubskrybować w naszym głównym komponencie klucz `:router` i b
 (rum/defcs contact []
   [:div "Strona kontaktowa"])
 
-(defn menu []
-  (let [{curr-route :handler params :params} (s/subscription [:router])
-        routes [[:app/index "List filmów"] [:app/contact "Kontakt"]]]
+(defn menu [curr-route params]
+  (let [routes [[:app/index "List filmów"] [:app/contact "Kontakt"]]]
     [:nav.menu.buttons-group {}
      (for [[route text] routes]
        [:a.button {:class (if (= curr-route route) "active")
@@ -1032,10 +992,9 @@ Teraz możemy zasubskrybować w naszym głównym komponencie klucz `:router` i b
 (rum/defcs wrapper <
   rum/reactive
   [state]
-  (let [{route :handler params :params} (s/subscription [:router])
-        routes [[:app/index "Lista filmów"] [:app/contact "Kontakt"]]]
+  (let [{route :handler params :params} (s/subscription [:router])]
     [:div#wrapper
-     (menu)
+     (menu route params)
 
      (case route
        :app/index (films)
@@ -1047,7 +1006,7 @@ Teraz możemy zasubskrybować w naszym głównym komponencie klucz `:router` i b
 
 
 ### Obsługa zapytania HTTP
-Na początku musimy dodać zależności:
+Na początku musimy dodać zależności. Potrzebny będzie kod obsługujący asynchroniczne zapytania HTTP. Do tego potrzebny nam jest moduł `cljs-http.client`, który przemianujeny na prostsze `http`, oraz makro bloku obsługującego asynchroniczne instrukcje `go` i funkcję, która przyjmie odpowiedź od serwera `<!`.
 ```clojure
 (ns core.store
     (:require-macros [cljs.core.async.macros :refer [go]])
@@ -1056,7 +1015,6 @@ Na początku musimy dodać zależności:
               [cljs-http.client :as http]
               [cljs.core.async :refer [<!]]))
 ```
-
 
 Do pobrania filmów z naszego API konieczne jest stworzenie kontrolera oraz `:effect-handler` odpowiadającego za zapytania http. W tym celu musimy zmodyfikować też definicję `reconciler`:
 ```clojure
@@ -1094,7 +1052,7 @@ Do pobrania filmów z naszego API konieczne jest stworzenie kontrolera oraz `:ef
 ```
 
 #### Komponent `films`
-Musimy stworzyć komponent, zasubskrybować store `:film`, wymusić zapytanie HTTP oraz przypisać do komponentu głównego. Komponent powinien wyświetlić tytuł, długość, opis, rok wydania i grupę wiekową pobranych filmów.
+Musimy stworzyć komponent, zasubskrybować store `:film`, wykonać zapytanie HTTP oraz przypisać do komponentu głównego. Komponent powinien wyświetlić tytuł, długość, opis, rok wydania i grupę wiekową pobranych filmów.
 ```clojure
 (rum/defcs films <
   rum/reactive
@@ -1112,12 +1070,12 @@ Musimy stworzyć komponent, zasubskrybować store `:film`, wymusić zapytanie HT
           [:small "Rating: " (get film "rating" "N/A")][:br]])]]))
 ```
 
-Chcemy mieć możliwość sortowania oraz grupowania filmów po parametrów. W związku z tym musimy przygotować atomy komponentu `rum/local`, przyciski zmieniające stan komponentu, oraz funkcję która przygotuje odpowiednio dane.
+Funkcja for nie pełni tutaj roli pętli, a iteratora po kolekcji. Chcemy mieć możliwość sortowania oraz grupowania filmów po parametrów. W związku z tym musimy przygotować atomy komponentu `rum/local`, przyciski zmieniające stan komponentu, oraz funkcję która przygotuje odpowiednio dane.
 
 #### Przygotowanie danych
 Musimy zaprogramować 2 funkcjonalności: sortowanie filmów, oraz grupowanie. `sorter` oraz `groupper` to parametry, po których bedziemy sortować/grupować.
 
-Makro `cond->>` działa następująco. Jeśli warunek jest spełniony, wywoływana jest funkcja, a pierwszy parametr makra jest przypisany do funkcji jako ostatni. Poniższe przykłady są tożsame.
+Makro `cond->>` działa następująco. Jeśli warunek jest spełniony, wywoływana jest funkcja, a pierwszy parametr makra jest przypisany do niej jako ostatni. Poniższe przykłady są tożsame.
 ```clojure
 (cond->> x
   true (concat [1 2 3])
@@ -1128,12 +1086,12 @@ Makro `cond->>` działa następująco. Jeśli warunek jest spełniony, wywoływa
       x (if false (concat [4 5 6] x))]
   x)
 ```
-Funkcja `case` działa tak, jak `switch-case` znane np. z języka C.
-Funkcje `sort-by` oraz `group-by` iterują po kolekcji wykonując funkcję, która jest podana jako pierwszy parametr. Ponizszy przykład posortuje po wartości pod kluczem `:a` a kolejny pogrupuje po wartości parametru `:b`
+Funkcja `case` działa analogicznie jak `switch-case` znane np. z języka C.
+Funkcje `sort-by` oraz `group-by` iterują po kolekcji wykonując funkcję, która jest podana jako pierwszy parametr. Ponizszy przykład posortuje po wartości pod kluczem `:a` a kolejny pogrupuje po wartości parametru `:b`.
 
 ```clojure
-(sort-by #(:a %) [{:a 1 :b 2} {:a 2 :b 2} {:a 0 :b 1}])
-;; [{:a 0 :b "a"} {:a 1 :b 2} {:a 2 :b 100}]
+(sort-by :a [{:a 1 :b 2} {:a 2 :b 2} {:a 0 :b 1}])
+;; [{:a 0 :b 1} {:a 1 :b 2} {:a 2 :b 2}]
 
 (group-by :b [{:a 1 :b 2} {:a 2 :b 2} {:a 0 :b 1}])
 ;; {1 [{:a 0 :b 1}],
@@ -1164,9 +1122,9 @@ Finalna forma funkcji sortująco-grupującej wygląda następująco:
 ```
 
 #### Komponent
-Komponent składa się z dwóch atomów `rum/local`, po których zmianie uaktualnie się komponent. Zmiana wartości atomów jest możliwa dzięki funkcjom `reset!` oraz `swap!`. Funkcja `for` pełni rolę iteratora po kolekcji.
+Komponent składa się z dwóch atomów `rum/local`, po których zmianie uaktualnia się komponent. Zmiana wartości atomów jest możliwa dzięki funkcjom `reset!` oraz `swap!`. Funkcja `for` pełni rolę iteratora po kolekcji.
 
-`sorters` oraz `grouppers` to macierz 2xN, gdzie pierwsza kolumna to klucz, a druga nazwa, która będzie wyświetlana.
+`sorters` oraz `grouppers` to macierz 2xN, gdzie pierwsza kolumna to klucz, a druga nazwa, która będzie wyświetlana na stronie.
 
 ```clojure
 (rum/defcs films <
@@ -1202,18 +1160,18 @@ Komponent składa się z dwóch atomów `rum/local`, po których zmianie uaktual
      [:div.hp_films {}
       (for [[group films] prepared-films]
         [:div {:key group}
-          [:h3 {} group]
-          (for [film films]
-            [:div.film {:key (get film "film-id")}
-              [:h2 {} (get film "title" "N/A")]
-              [:p {} (get film "description" "N/A")]
-              [:small "Data wydania: " (get film "release-year" "N/A") " r."][:br]
-              [:small "Długość: " (get film "length" "N/A")][:br]
-              [:small "Rating: " (get film "rating" "N/A")][:br]])])]]))
+         [:h3 {} group]
+         (for [film films]
+           [:div.film {:key (get film "film-id")}
+            [:h2 {} (get film "title" "N/A")]
+            [:p {} (get film "description" "N/A")]
+            [:small "Data wydania: " (get film "release-year" "N/A") " r."][:br]
+            [:small "Długość: " (get film "length" "N/A")][:br]
+            [:small "Rating: " (get film "rating" "N/A")][:br]])])]]))
 ```
 
 #### Obsługa formularza
-Aby wysłać formularz musimy najpierw stworzyć funkcję obsługującą zapytanie POST. W tym celu w `core.store` dodajemy multimetodę `post!`. Wykonanie metody `:contact-form` spowoduje wysłanie pod wybrany adres parametrów jako "form-params"
+Aby wysłać formularz musimy najpierw stworzyć funkcję obsługującą zapytanie POST. W tym celu w `core.store` dodajemy multimetodę `post!`. Wykonanie metody `:contact-form` spowoduje wysłanie pod wybrany adres parametrów jako *form-params*
 ```clojure
 (defmulti post! identity)
 (defmethod post! :contact-form [x params y z]
@@ -1223,19 +1181,37 @@ Aby wysłać formularz musimy najpierw stworzyć funkcję obsługującą zapytan
                                   :form-params params}))]
           res))))
 ```
-Następnie stworzyć musimy komponent w `frontend.core`. Dla przyspieszenia prac stworzony dodatkowy komponent `input`, który w generyczny sposób pozwoli na dodanie nowych pól w formularzu. Jego pierwszym argumentem będzie atom formularza. Następnie podany jest klucz, po którym dane pole będzie rozróżniane (w atomie), oraz etykieta i parametry. Parametry są mapą. W przypadku, gdy znajdzie się tam klucz `:tag`, wartość jest wykorzystywana jako tag HTML, którym domyślnie jest input. Dodatkowo po każdej zmianie zawartości (`:on-change`) stan formularza jest aktualizowany.
+Następnie stworzyć musimy komponent w `frontend.core`. Dla przyspieszenia prac stworzony dodatkowy komponent `input`, który w generyczny sposób pozwoli na dodanie nowych pól w formularzu. Jego pierwszym argumentem będzie atom formularza. Następnie podany jest unikalny klucz, po którym dane pole będzie rozróżniane (w atomie), oraz etykieta i parametry. Parametry są mapą. W przypadku, gdy znajdzie się tam klucz `:tag`, wartość jest wykorzystywana jako tag HTML, którym domyślnie jest input. Dodatkowo po każdej zmianie zawartości (`:on-change`) stan formularza jest aktualizowany.
 
-Sam komponent formularza składa się z atomu, pól, przycisku wysyłki i podglądu stanu. Po wysłaniu stan formularza jest resetowany do pustej mapy.
+Sam komponent formularza składa się z atomu, pól, przycisku wysłania formularza i podglądu obecnego stanu. Po wysłaniu stan formularza jest resetowany do pustej mapy.
+
+Funkcja `merge` łączy ze sobą 2 mapy. W przypadku obecności takich samych kluczy, brana jest wartość z mapy drugiej.
+```clojure
+user=> (merge {:a 1 :b 2} {:b 20 :c 30})
+{:a 1 :b 20 :c 30}
+```
+Funkcja `or` zwraca pierwszy parametr, który różni się od `nil` oraz `false`, bądź ostatni parametr w przeciwnym wypadku.
+```clojure
+user=> (or nil false)
+false
+user=>  (or false nil)
+nil
+user=> (or nil 10)
+10
+user=> (or 10 100)
+10
+```
+
 ```clojure
 (rum/defc input
   [atom key label params]
   [:label.form-input
-       [:span label]
-       [(or (:tag params) :input)
-        (merge {:type "text"
-                :value (or (key @atom) "")
-                :on-change #(swap! atom assoc key (-> % .-target .-value))}
-               (dissoc params :tag))]])
+   [:span label]
+   [(or (:tag params) :input)
+    (merge {:type "text"
+            :value (or (key @atom) "")
+            :on-change #(swap! atom assoc key (-> % .-target .-value))}
+           (dissoc params :tag))]])
 ```
 
 ```clojure
@@ -1246,8 +1222,8 @@ Sam komponent formularza składa się z atomu, pól, przycisku wysyłki i podgl�
         form-data @form]
     [:div.contact
      [:h2 {} "Kontakt"]
-     [:form {:on-submit (fn []
-                          (.preventDefault %)
+     [:form {:on-submit (fn [ev]
+                          (.preventDefault ev)
                           (s/post! :contact-form form-data)
                           (reset! form {}))}
       (input form :name "Adresat")
